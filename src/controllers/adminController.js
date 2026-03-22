@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const prisma = require("../prismaClient.js");
+const prisma = require("../prismaClient");
 
 // --- 1. Création d'un compte (Register) ---
 const register = async (req, res) => {
@@ -20,7 +20,7 @@ const register = async (req, res) => {
         const nouvelAdmin = await prisma.admin.create({
             data: {
                 login,
-                motDePasse: motDePasseHashe,
+                motDePasseHashe,
                 role: role || "AUTEUR"
             }
         });
