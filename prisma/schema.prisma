@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ------------------------------------------------------
+// 8.1 Entité Histoire
+// ------------------------------------------------------
+model Histoire {
+  id            String   @id @default(uuid())
+  titre         String
+  slug          String   @unique
+  resume        String?
+  description   String?
+  image         String?
+  statut        String   @default("BROUILLON")
+  pointDeDepart String?
+  dateCreation  DateTime @default(now())
+  dateMiseAJour DateTime @updatedAt
+
+  // NOUVEAU : Lien vers l'auteur
+  auteurId String? // Optionnel au cas où un admin crée une histoire générique
+  auteur   Admin?  @relation(fields: [auteurId], references: [id], onDelete: SetNull)
+
+  // Relations existantes
+  chapitres   Chapitre[]
+  objets      Objet[]
+  sauvegardes Sauvegarde[]
+}
+
+// ------------------------------------------------------
+// 8.2 Entité Chapitre (Nœud narratif)
+// ------------------------------------------------------
+model Chapitre {
+  id           String  @id @default(uuid())
+  histoireId   String
+  titreInterne String? // Titre pour le back-office uniquement
+  contenu      String  @db.Text
+  image        String?
+  effetsEntree Json? // Ex: { "pv": -2, "donneObjet": "cle-or" }
+  ordre        Int? // Optionnel, pour trier dans le back-office
+
+  // Relations
+  histoire      Histoire     @relation(fields: [histoireId], references: [id], onDelete: Cascade)
+  choixSortants Choix[]      @relation("ChoixSource")
+  choixEntrants Choix[]      @relation("ChoixDestination")
+  sauvegardes   Sauvegarde[]
+}
+
+// ------------------------------------------------------
+// 8.3 Entité Choix (Embranchements)
+// ------------------------------------------------------
+model Choix {
+  id                    String  @id @default(uuid())
+  chapitreSourceId      String
+  libelle               String
+  destinationChapitreId String? // Peut être null si le choix mène à un Game Over ou combat générique
+  conditions            Json? // Ex: { "objetRequis": "cle-or", "minForce": 10 }
+  effets                Json? // Ex: { "pv": +5 }
+  testAssocie           Json? // Ex: { "type": "2d6", "carac": "agilite", "seuil": 10 }
+
+  // Relations
+  chapitreSource      Chapitre  @relation("ChoixSource", fields: [chapitreSourceId], references: [id], onDelete: Cascade)
+  chapitreDestination Chapitre? @relation("ChoixDestination", fields: [destinationChapitreId], references: [id], onDelete: SetNull)
+}
+
+// ------------------------------------------------------
+// 8.4 Entité Objet (Inventaire)
+// ------------------------------------------------------
+model Objet {
+  id          String  @id @default(uuid())
+  histoireId  String? // Optionnel : null = objet global, défini = objet spécifique à une histoire
+  nom         String
+  description String?
+  type        String // Ex: ARME, SOIN, PASSIF, QUETE
+  effet       Json? // Ex: { "bonusForce": 2, "soin": 10 }
+
+  // Relation
+  histoire Histoire? @relation(fields: [histoireId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// 8.5 Entité Article (Blog / Actus)
+// ------------------------------------------------------
+model Article {
+  id              String    @id @default(uuid())
+  titre           String
+  slug            String    @unique
+  extrait         String?
+  contenu         String    @db.Text
+  image           String?
+  statut          String    @default("BROUILLON")
+  datePublication DateTime?
+  dateCreation    DateTime  @default(now())
+  dateMiseAJour   DateTime  @updatedAt
+}
+
+// ------------------------------------------------------
+// 8.6 Entité Admin / Staff (Mise à jour)
+// ------------------------------------------------------
+model Admin {
+  id              String @id @default(uuid())
+  login           String @unique
+  motDePasseHashe String
+
+  // Le rôle déterminera les droits : "ADMIN" (accès total) ou "AUTEUR" (accès restreint)
+  role String @default("AUTEUR")
+
+  dateDerniereConnex DateTime?
+  dateCreation       DateTime  @default(now())
+
+  // NOUVEAU : Liste des histoires créées par cette personne
+  histoires Histoire[]
+}
+
+// ------------------------------------------------------
+// 8.7 Entité Utilisateur (Joueur)
+// ------------------------------------------------------
+model Utilisateur {
+  id                 String    @id @default(uuid())
+  pseudo             String    @unique
+  email              String    @unique
+  motDePasseHashe    String
+  dateCreation       DateTime  @default(now())
+  dateDerniereConnex DateTime?
+
+  // Relations
+  sauvegardes Sauvegarde[]
+}
+
+// ------------------------------------------------------
+// 8.8 Entité Sauvegarde (État de la partie)
+// ------------------------------------------------------
+model Sauvegarde {
+  id                String @id @default(uuid())
+  utilisateurId     String
+  histoireId        String
+  chapitreCourantId String
+
+  // État du personnage et de la partie (Stocké en JSON pour un maximum de flexibilité)
+  pointsDeVie      Int   @default(20)
+  caracteristiques Json? // Ex: { "force": 12, "agilite": 10, "chance": 8 }
+  inventaire       Json? // Ex: ["cle-rouillee", "potion-soin"] (Tableau d'identifiants d'objets)
+  variablesEtat    Json? // Ex: { "aTueLeDragon": true, "porteOuverte": false }
+
+  dateCreation  DateTime @default(now())
+  dateMiseAJour DateTime @updatedAt
+
+  // Relations
+  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  histoire        Histoire    @relation(fields: [histoireId], references: [id], onDelete: Cascade)
+  chapitreCourant Chapitre    @relation(fields: [chapitreCourantId], references: [id], onDelete: Restrict)
+
+  // Contrainte : Un utilisateur ne peut avoir qu'une seule sauvegarde par histoire (à adapter si tu veux du multi-slot)
+  @@unique([utilisateurId, histoireId])
+}
