@@ -5,15 +5,15 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ------------------------------------------------------
-// 8.1 Entité Histoire
+// 8.1 Entité Histoire (Mise à jour)
 // ------------------------------------------------------
 model Histoire {
   id            String   @id @default(uuid())
@@ -27,11 +27,9 @@ model Histoire {
   dateCreation  DateTime @default(now())
   dateMiseAJour DateTime @updatedAt
 
-  // NOUVEAU : Lien vers l'auteur
-  auteurId String? // Optionnel au cas où un admin crée une histoire générique
+  auteurId String?
   auteur   Admin?  @relation(fields: [auteurId], references: [id], onDelete: SetNull)
 
-  // Relations existantes
   chapitres   Chapitre[]
   objets      Objet[]
   sauvegardes Sauvegarde[]
@@ -43,13 +41,12 @@ model Histoire {
 model Chapitre {
   id           String  @id @default(uuid())
   histoireId   String
-  titreInterne String? // Titre pour le back-office uniquement
+  titreInterne String?
   contenu      String  @db.Text
   image        String?
-  effetsEntree Json? // Ex: { "pv": -2, "donneObjet": "cle-or" }
-  ordre        Int? // Optionnel, pour trier dans le back-office
+  effetsEntree Json?
+  ordre        Int?
 
-  // Relations
   histoire      Histoire     @relation(fields: [histoireId], references: [id], onDelete: Cascade)
   choixSortants Choix[]      @relation("ChoixSource")
   choixEntrants Choix[]      @relation("ChoixDestination")
@@ -63,10 +60,10 @@ model Choix {
   id                    String  @id @default(uuid())
   chapitreSourceId      String
   libelle               String
-  destinationChapitreId String? // Peut être null si le choix mène à un Game Over ou combat générique
-  conditions            Json? // Ex: { "objetRequis": "cle-or", "minForce": 10 }
-  effets                Json? // Ex: { "pv": +5 }
-  testAssocie           Json? // Ex: { "type": "2d6", "carac": "agilite", "seuil": 10 }
+  destinationChapitreId String?
+  conditions            Json?
+  effets                Json?
+  testAssocie           Json?
 
   // Relations
   chapitreSource      Chapitre  @relation("ChoixSource", fields: [chapitreSourceId], references: [id], onDelete: Cascade)
@@ -78,11 +75,11 @@ model Choix {
 // ------------------------------------------------------
 model Objet {
   id          String  @id @default(uuid())
-  histoireId  String? // Optionnel : null = objet global, défini = objet spécifique à une histoire
+  histoireId  String?
   nom         String
   description String?
-  type        String // Ex: ARME, SOIN, PASSIF, QUETE
-  effet       Json? // Ex: { "bonusForce": 2, "soin": 10 }
+  type        String
+  effet       Json?
 
   // Relation
   histoire Histoire? @relation(fields: [histoireId], references: [id], onDelete: Cascade)
@@ -112,13 +109,11 @@ model Admin {
   login           String @unique
   motDePasseHashe String
 
-  // Le rôle déterminera les droits : "ADMIN" (accès total) ou "AUTEUR" (accès restreint)
   role String @default("AUTEUR")
 
   dateDerniereConnex DateTime?
   dateCreation       DateTime  @default(now())
 
-  // NOUVEAU : Liste des histoires créées par cette personne
   histoires Histoire[]
 }
 
@@ -146,20 +141,17 @@ model Sauvegarde {
   histoireId        String
   chapitreCourantId String
 
-  // État du personnage et de la partie (Stocké en JSON pour un maximum de flexibilité)
   pointsDeVie      Int   @default(20)
-  caracteristiques Json? // Ex: { "force": 12, "agilite": 10, "chance": 8 }
-  inventaire       Json? // Ex: ["cle-rouillee", "potion-soin"] (Tableau d'identifiants d'objets)
-  variablesEtat    Json? // Ex: { "aTueLeDragon": true, "porteOuverte": false }
+  caracteristiques Json?
+  inventaire       Json?
+  variablesEtat    Json?
 
   dateCreation  DateTime @default(now())
   dateMiseAJour DateTime @updatedAt
 
-  // Relations
   utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
   histoire        Histoire    @relation(fields: [histoireId], references: [id], onDelete: Cascade)
   chapitreCourant Chapitre    @relation(fields: [chapitreCourantId], references: [id], onDelete: Restrict)
 
-  // Contrainte : Un utilisateur ne peut avoir qu'une seule sauvegarde par histoire (à adapter si tu veux du multi-slot)
   @@unique([utilisateurId, histoireId])
 }
