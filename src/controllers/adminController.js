@@ -25,7 +25,7 @@ const register = async (req, res) => {
             }
         });
 
-        res.status(201).json({message: "Compte créé avec succès !", adminId: nouvelAdmin.id});
+        res.status(201).json({message: "Compte créé avec succès !", adminId: nouvelAdmin["id"]});
     } catch (error) {
         console.error("Erreur register :", error);
         res.status(500).json({message: "Erreur lors de la création du compte."});
@@ -42,26 +42,26 @@ const login = async (req, res) => {
             return res.status(401).json({ message: "Identifiants incorrects." });
         }
 
-        const isMatch = await bcrypt.compare(motDePasse, admin.motDePasseHashe);
+        const isMatch = await bcrypt.compare(motDePasse, admin["motDePasseHashe"]);
         if (!isMatch) {
             return res.status(401).json({ message: "Identifiants incorrects." });
         }
 
         await prisma.admin.update({
-            where: { id: admin.id },
+            where: { id: admin["id"] },
             data: { dateDerniereConnex: new Date() }
         });
 
         const token = jwt.sign(
-            { id: admin.id, role: admin.role },
-            process.env.JWT_SECRET,
+            { id: admin["id"], role: admin["role"] },
+            process.env.JWT_ACCESS_SECRET,
             { expiresIn: '24h' }
         );
 
         res.status(200).json({
             message: "Connexion réussie",
             token,
-            role: admin.role
+            role: admin["role"]
         });
     } catch (error) {
         console.error("Erreur login:", error);
