@@ -4,19 +4,19 @@ const cors = require("cors");
 const adminRoutes = require("./routes/adminRoutes");
 const histoireRoutes = require("./routes/histoireRoutes");
 const chapitreRoutes = require("./routes/chapitreRoutes");
+const choixRoutes = require("./routes/choixRoutes");
 
 const app = express();
 
-// --- Middlewares ---
 app.use(cors());
 app.use(express.json());
 
-// --- Déclaration des routes de l'API ---
-app.use('/api/admin', adminRoutes);
-app.use('/api/histoires', histoireRoutes);
-app.use('/api/chapitres', chapitreRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/histoires", histoireRoutes);
+app.use("/api/chapitres", chapitreRoutes);
+app.use("/api/choix", choixRoutes);
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
     res.json({ message: "Bienvenue sur l'API de ton Histoire Interactive ! 🎲" });
 });
 
