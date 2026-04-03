@@ -1,18 +1,29 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+
+const adminRoutes = require("./routes/adminRoutes");
+const histoireRoutes = require("./routes/histoireRoutes");
+const chapitreRoutes = require("./routes/chapitreRoutes");
+const choixRoutes = require("./routes/choixRoutes");
+const objetRoutes = require("./routes/objetRoutes");
+const joueurRoutes = require('./routes/joueurRoutes');
+const sauvegardeRoutes = require('./routes/sauvegardeRoutes');
 
 const app = express();
 
-// --- Middlewares ---
 app.use(cors());
 app.use(express.json());
 
-// --- Route de test ---
-app.get('/', (req, res) => {
-    res.json({
-        message: "Bienvenue sur l'API de ton Histoire Interactive ! 🎲",
-        statut: "En ligne"
-    });
+app.use("/api/admin", adminRoutes);
+app.use("/api/histoires", histoireRoutes);
+app.use("/api/chapitres", chapitreRoutes);
+app.use("/api/choix", choixRoutes);
+app.use("/api/objets", objetRoutes);
+app.use('/api/joueurs', joueurRoutes);
+app.use('/api/sauvegardes', sauvegardeRoutes);
+
+app.get("/", (req, res) => {
+    res.json({ message: "Bienvenue sur l'API de ton Histoire Interactive ! 🎲" });
 });
 
 module.exports = app;
