@@ -7,4 +7,8 @@ router.post("/", verifierToken, objetController.creerObjet);
 
 router.get("/histoire/:histoireId", objetController.getObjetsParHistoire);
 
+router.put('/:id', verifierToken, objetController.modifierObjet);
+
+router.delete('/:id', verifierToken, objetController.supprimerObjet);
+
 module.exports = router;

@@ -49,4 +49,34 @@ const getObjetsParHistoire = async (req, res) => {
     }
 };
 
-module.exports = { creerObjet, getObjetsParHistoire };
+const modifierObjet = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nom, description, type, effet } = req.body;
+
+        const objetModifie = await prisma.objet.update({
+            where: { id },
+            data: { nom, description, type, effet }
+        });
+
+        res.status(200).json({ message: "Objet modifié avec succès", objet: objetModifie });
+    } catch (error) {
+        console.error("Erreur modifierObjet:", error);
+        res.status(500).json({ message: "Erreur lors de la modification de l'objet." });
+    }
+};
+
+const supprimerObjet = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await prisma.objet.delete({ where: { id } });
+
+        res.status(200).json({ message: "Objet supprimé avec succès." });
+    } catch (error) {
+        console.error("Erreur supprimerObjet:", error);
+        res.status(500).json({ message: "Erreur lors de la suppression de l'objet." });
+    }
+};
+
+module.exports = { creerObjet, getObjetsParHistoire, modifierObjet,supprimerObjet };
