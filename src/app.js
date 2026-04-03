@@ -6,6 +6,8 @@ const histoireRoutes = require("./routes/histoireRoutes");
 const chapitreRoutes = require("./routes/chapitreRoutes");
 const choixRoutes = require("./routes/choixRoutes");
 const objetRoutes = require("./routes/objetRoutes");
+const joueurRoutes = require('./routes/joueurRoutes');
+const sauvegardeRoutes = require('./routes/sauvegardeRoutes');
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.use("/api/histoires", histoireRoutes);
 app.use("/api/chapitres", chapitreRoutes);
 app.use("/api/choix", choixRoutes);
 app.use("/api/objets", objetRoutes);
+app.use('/api/joueurs', joueurRoutes);
+app.use('/api/sauvegardes', sauvegardeRoutes);
 
 app.get("/", (req, res) => {
     res.json({ message: "Bienvenue sur l'API de ton Histoire Interactive ! 🎲" });
