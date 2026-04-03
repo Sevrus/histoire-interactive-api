@@ -49,4 +49,34 @@ const getChapitresParHistoire = async (req, res) => {
     }
 };
 
-module.exports = { creerChapitre, getChapitresParHistoire };
+const modifierChapitre = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { titreInterne, contenu, effetsEntree, ordre } = req.body;
+
+        const chapitreModifie = await prisma.chapitre.update({
+            where: { id },
+            data: { titreInterne, contenu, effetsEntree, ordre }
+        });
+
+        res.status(200).json({ message: "Chapitre modifié avec succès", chapitre: chapitreModifie });
+    } catch (error) {
+        console.error("Erreur modifierChapitre:", error);
+        res.status(500).json({ message: "Erreur lors de la modification du chapitre." });
+    }
+};
+
+const supprimerChapitre = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await prisma.chapitre.delete({ where: { id } });
+
+        res.status(200).json({ message: "Chapitre supprimé avec succès." });
+    } catch (error) {
+        console.error("Erreur supprimerChapitre:", error);
+        res.status(500).json({ message: "Erreur lors de la suppression du chapitre." });
+    }
+};
+
+module.exports = { creerChapitre, getChapitresParHistoire, modifierChapitre, supprimerChapitre };
