@@ -55,4 +55,4 @@ const loginJoueur = async (req, res) => {
     }
 }
 
-module.exports = { registerJoueur };
+module.exports = { registerJoueur, loginJoueur };
