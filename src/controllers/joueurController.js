@@ -39,7 +39,7 @@ const loginJoueur = async (req, res) => {
 
         await prisma.utilisateur.update({
             where: { id: joueur["id"] },
-            data: { dateDerniereConnexion: new Date() }
+            data: { dateDerniereConnex: new Date() }
         });
 
         const token = jwt.sign(
