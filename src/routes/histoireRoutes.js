@@ -8,4 +8,8 @@ router.post("/", verifierToken, histoireController.creerHistoire);
 router.get("/", histoireController.getHistoires);
 router.get("/:id", histoireController.getHistoireById);
 
+router.put('/:id', verifierToken, histoireController.modifierHistoire);
+
+router.delete('/:id', verifierToken, histoireController.supprimerHistoire);
+
 module.exports = router;

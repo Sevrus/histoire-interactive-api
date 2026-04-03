@@ -69,4 +69,50 @@ const getHistoireById = async (req, res) => {
     }
 };
 
-module.exports = { creerHistoire, getHistoires, getHistoireById };
+const modifierHistoire = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { titre, slug, resume, description, statut, pointDeDepart } = req.body;
+
+        const histoireExistante = await prisma.histoire.findUnique({ where: { id } });
+        if (!histoireExistante) {
+            return res.status(404).json({ message: "Histoire introuvable." });
+        }
+        if (req.user.role !== "ADMIN" && histoireExistante["auteurId"] !== req.user.id) {
+            return res.status(403).json({ message: "Vous n'avez pas le droit de modifier cette histoire." });
+        }
+
+        const histoireModifiee = await prisma.histoire.update({
+            where: { id },
+            data: { titre, slug, resume, description, statut, pointDeDepart }
+        });
+
+        res.status(200).json({ message: "Histoire modifiée avec succès", histoire: histoireModifiee });
+    } catch (error) {
+        console.error("Erreur modifierHistoire:", error);
+        res.status(500).json({ message: "Erreur lors de la modification de l'histoire." });
+    }
+};
+
+const supprimerHistoire = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const histoireExistante = await prisma.histoire.findUnique({ where: { id } });
+        if (!histoireExistante) {
+            return res.status(404).json({ message: "Histoire introuvable." });
+        }
+        if (req.user.role !== "ADMIN" && histoireExistante["auteurId"] !== req.user.id) {
+            return res.status(403).json({ message: "Vous n'avez pas le droit de supprimer cette histoire." });
+        }
+
+        await prisma.histoire.delete({ where: { id } });
+
+        res.status(200).json({ message: "Histoire et contenus liés supprimés avec succès." });
+    } catch (error) {
+        console.error("Erreur supprimerHistoire:", error);
+        res.status(500).json({ message: "Erreur lors de la suppression de l'histoire." });
+    }
+};
+
+module.exports = { creerHistoire, getHistoires, getHistoireById, modifierHistoire, supprimerHistoire };
